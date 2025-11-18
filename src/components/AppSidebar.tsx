@@ -27,9 +27,7 @@ const menuItems = [
   { title: "Products", url: "/products", icon: Package },
   { title: "Brands", url: "/brands", icon: Tag },
   { title: "RFQs", url: "/rfqs", icon: FileText },
-  { title: "Clients", url: "/clients", icon: Users },
   // { title: "Certifications", url: "/certifications", icon: Award }, // Removed as per request
-  { title: "Content", url: "/content", icon: Edit },
   { title: "Users & Roles", url: "/users-roles", icon: UserCog },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
