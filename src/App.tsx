@@ -12,8 +12,6 @@ import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Brands from "./pages/Brands";
 import RFQs from "./pages/RFQs";
-import Clients from "./pages/Clients";
-import Content from "./pages/Content";
 import UsersRoles from "./pages/UsersRoles";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -70,8 +68,6 @@ const App = () => (
                           <Route path="/products" element={<Products />} />
                           <Route path="/brands" element={<Brands />} />
                           <Route path="/rfqs" element={<RFQs />} />
-                          <Route path="/clients" element={<Clients />} />
-                          <Route path="/content" element={<Content />} />
                           <Route path="/users-roles" element={<UsersRoles />} />
                           <Route path="/settings" element={<Settings />} />
                           <Route path="/ebay/oauth" element={<EbayAuth />} />
