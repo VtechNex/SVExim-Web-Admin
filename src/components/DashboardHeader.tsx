@@ -11,6 +11,7 @@ const EBAY_OAUTH_URL = import.meta.env.VITE_EBAY_OAUTH_URL;
 
 export function DashboardHeader() {
   const [isEbayConnected, setIsEbayConnected] = useState(false);
+  const [user, setUser] = useState({username: '-', email: '-'});
 
   useEffect(() => {
     const checkEbayConnection = async () => {
@@ -18,6 +19,17 @@ export function DashboardHeader() {
       setIsEbayConnected(response && response.status === 201)
     }
     checkEbayConnection();
+  }, []);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userData = await AUTH.getUser();
+      const local = userData?.email?.split('@')[0] || '';
+      const username = (local.replace(/\d+/g, '') || 'User').trim();
+      userData.username = username;
+      setUser(userData);
+    };
+    fetchUser();
   }, []);
 
   const handleConnectEbay = () => {
@@ -68,8 +80,8 @@ export function DashboardHeader() {
           {/* Admin Info */}
           <div className="flex items-center gap-2">
             <div className="text-right">
-              <div className="text-sm font-medium text-primary">Admin User</div>
-              <div className="text-xs text-muted-foreground">admin@svexim.com</div>
+              <div className="text-sm font-medium text-primary">{user.username}</div>
+              <div className="text-xs text-muted-foreground">{user.email}</div>
             </div>
             <Avatar className="h-10 w-10">
               <AvatarFallback className="bg-secondary text-secondary-foreground">
