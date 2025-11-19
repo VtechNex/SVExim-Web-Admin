@@ -27,6 +27,7 @@ const Brands = () => {
   });
   const [isEditMode, setIsEditMode] = useState(false);
   const [faqInput, setFaqInput] = useState("");
+  const [faqList, setFaqList] = useState([]);
 
   useEffect(() => {
     const fetchBrands = async () => {
@@ -48,6 +49,7 @@ const Brands = () => {
       logoUrl: "",
       faq: [],
     });
+    setFaqList([]);
     setIsEditMode(false);
     setFaqInput("");
   };
@@ -63,6 +65,8 @@ const Brands = () => {
   };
 
   const handleEditBrand = (brand) => {
+    console.log('Brand to edit:', brand);
+    setFaqList(brand.faq === null?[]: brand.faq);
     setFormData(brand);
     setIsEditMode(true);
     setIsDialogOpen(true);
@@ -76,37 +80,36 @@ const Brands = () => {
 
   const handleAddFaq = () => {
     if (faqInput.trim() === "") return;
-    setFormData((prev) => ({
-      ...prev,
-      faq: [...prev.faq, faqInput.trim()],
-    }));
+    setFaqList((prev) => [...prev, faqInput.trim()]);
     setFaqInput("");
   };
 
   const handleDeleteFaq = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      faq: prev.faq.filter((_, i) => i !== index),
-    }));
+    setFaqList((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name) {
       alert("Please enter the brand name.");
       return;
     }
+    const newFormdata = { ...formData, faq: faqList };
+    setFormData(newFormdata);
 
     if (isEditMode) {
+      console.log('Updating brand with data:', newFormdata);
       // Update existing brand
+      const response = await BRANDS.UPDATE(formData.id, formData);
+      if (response?.status !== 200 || response?.status !== 201) {
+        console.error("Failed to update brand", response);
+        return;
+      }
       setBrands(brands.map((b) => (b.id === formData.id ? formData : b)));
     } else {
+      console.log('Creating brand with data:', newFormdata);
       // Add new brand
-      const newBrand = {
-        ...formData,
-        id: brands.length ? Math.max(...brands.map((b) => b.id)) + 1 : 1,
-      };
-      setBrands([...brands, newBrand]);
+      setBrands([...brands, newFormdata]);
     }
 
     setIsDialogOpen(false);
@@ -210,11 +213,11 @@ const Brands = () => {
             </div>
             <div>
               <h4 className="font-semibold">Current FAQs:</h4>
-              {formData.faq.length === 0 ? (
+              {faqList.length === 0 ? (
                 <p className="text-muted-foreground">No FAQs added.</p>
               ) : (
                 <ul className="list-disc list-inside">
-                  {formData.faq.map((faq, index) => (
+                  {faqList.map((faq, index) => (
                     <li key={index} className="flex justify-between items-center">
                       <span>{faq}</span>
                       <Button

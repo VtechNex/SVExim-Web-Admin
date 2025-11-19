@@ -3,22 +3,74 @@ import { Button } from "@/components/ui/button";
 import { Plus, UserCog } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import USERS from "@/services/userService";
+import { AUTH } from "@/services/authService";
 
 const UsersRoles = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [users, setUsers] = useState([]);
+  const [created, setCreated] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log({ username, password });
-    // Reset form and close dialog
+
+    // Username Validation
+    if (!username || username.trim().length < 3) {
+      alert("Username should be at least 3 characters long");
+      return;
+    }
+
+    // Email Validation (simple but correct)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
+    // Password Validation
+    if (!password || password.trim().length < 6) {
+      alert("Password must be at least 6 characters long");
+      return;
+    }
+
+    // If everything is valid
+    console.log("Form is valid, creating user...");
+    const response = await USERS.ADD({ name: username, email, password })
+    if (response.status !== 201) {
+      console.error("Error while creating user: ", response);
+      return;
+    }
+
+    setCreated(!created)
+
+    // Reset form & close dialog
     setUsername("");
+    setEmail("");
     setPassword("");
     setOpenDialog(false);
   };
+
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const user = await AUTH.getUser();
+      const response = await USERS.GET();
+      if (response.status === 200) {
+        const fetchedUsers = response.data?.users?.filter((u) => u.email !== user.email);
+        console.log("Fetched users:", fetchedUsers);
+        setUsers(fetchedUsers);
+      } else {
+        console.error("Failed to fetch users:", response);
+        setUsers([]);
+      }
+    };
+
+    fetchUsers();
+  }, [created]);
 
   return (
     <div className="space-y-6">
@@ -63,6 +115,21 @@ const UsersRoles = () => {
                 />
               </div>
 
+              {/* Email */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Enter email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="border-gray-300"
+                  required
+                />
+              </div>
+
               {/* Password */}
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700">
@@ -89,7 +156,8 @@ const UsersRoles = () => {
         </Dialog>
       </div>
 
-      <Card>
+      {(users.length === 0 && (
+        <Card>
         <CardContent className="flex items-center justify-center h-64">
           <div className="text-center">
             <UserCog className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -97,6 +165,36 @@ const UsersRoles = () => {
           </div>
         </CardContent>
       </Card>
+      )) || (<Card className="border border-gray-200">
+          <CardContent className="p-4">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100 text-left">
+                  <th className="p-3 text-gray-700 font-semibold">ID</th>
+                  <th className="p-3 text-gray-700 font-semibold">Name</th>
+                  <th className="p-3 text-gray-700 font-semibold">Email</th>
+                  <th className="p-3 text-gray-700 font-semibold">Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {users.map((user, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="p-3 text-gray-800">{user.id}</td>
+                    <td className="p-3 text-gray-800">{user.name}</td>
+                    <td className="p-3 text-gray-800">{user.email}</td>
+                    <td className="p-3">
+                      <Button variant="outline" size="sm">
+                        Manage Roles
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
