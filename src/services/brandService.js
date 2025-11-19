@@ -18,8 +18,13 @@ const createBrand = async (brandData) => {
 };
 
 const updateBrand = async (id, brandData) => {
-  const response = await axios.put(`${API_BASE_URL}/${id}`, brandData);
-  return response.data;
+  try {
+    const response = await axios.put(`${API_BASE_URL}/${id}`, brandData);
+    return response;
+  } catch (error) {
+    console.error('Error updating brand:', error);
+    return error.response;
+  }
 };
 
 const deleteBrand = async (id) => {
@@ -30,7 +35,7 @@ const deleteBrand = async (id) => {
 const BRANDS = {
   GET: getBrands,
   ADD: createBrand,
-  UPDATED: updateBrand,
+  UPDATE: updateBrand,
   DELETE: deleteBrand,
 };
 
