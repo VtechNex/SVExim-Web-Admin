@@ -116,7 +116,7 @@ const Brands = () => {
     if (isEditMode) {
       const response = await BRANDS.UPDATE(formData.id, newFormdata);
       if (!(response?.status === 200 || response?.status === 201)) {
-        console.error("Failed to update");
+        console.error("Failed to update", response);
         return;
       }
 

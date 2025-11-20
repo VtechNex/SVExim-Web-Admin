@@ -1,6 +1,9 @@
 import axios from 'axios';
+import { AUTH } from './authService';
 
 const API_BASE_URL = import.meta.env.VITE_BRANDS_API;
+const user = AUTH.getUser();
+if (user) axios.defaults.headers.common.Authorization = `Bearer ${user.token}`
 
 const getBrands = async () => {
   try {
