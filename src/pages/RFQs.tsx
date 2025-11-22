@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
@@ -10,38 +10,26 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-
-const initialRfqs = [
-  {
-    id: "RFQ-2024-001",
-    title: "Industrial Valve Set",
-    company: "Marine Solutions Ltd",
-    date: "2024-01-15",
-    amount: "$15,000",
-    status: "pending",
-  },
-  {
-    id: "RFQ-2024-002",
-    title: "Hydraulic Pump",
-    company: "Ocean Logistics Inc",
-    date: "2024-01-14",
-    amount: "$8,500",
-    status: "approved",
-  },
-  {
-    id: "RFQ-2024-003",
-    title: "Steel Fittings",
-    company: "Port Authority",
-    date: "2024-01-13",
-    amount: "$22,000",
-    status: "review",
-  },
-];
+import QUOTES from '@/services/quoteService';
 
 const RFQs = () => {
-  const [rfqs, setRfqs] = useState(initialRfqs);
+  const [quotes, setQuotes] = useState(null);
   const [selectedRfq, setSelectedRfq] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(()=>{
+    const fetchQuotes = async () => {
+      const response = await QUOTES.GET();
+      if (response.status!==200) {
+        // error
+        console.log('Error fetching quotes', response);
+      } else {
+        console.log('Quotes:', response.data);
+        setQuotes(response.data.quotes);
+      }
+    }
+    fetchQuotes();
+  },[]);
 
   const getStatusBadge = (status: string) => {
     if (status === "approved") {
@@ -85,27 +73,27 @@ const RFQs = () => {
     setIsDialogOpen(false);
   };
 
-  const handleApprove = () => {
-    if (!selectedRfq) return;
-    setRfqs((prev) =>
-      prev.map((rfq) =>
-        rfq.id === selectedRfq.id ? { ...rfq, status: "approved" } : rfq
-      )
-    );
-    alert(`RFQ ${selectedRfq.id} approved.`);
-    closeDialog();
-  };
+  // const handleApprove = () => {
+  //   if (!selectedRfq) return;
+  //   setRfqs((prev) =>
+  //     prev.map((rfq) =>
+  //       rfq.id === selectedRfq.id ? { ...rfq, status: "approved" } : rfq
+  //     )
+  //   );
+  //   alert(`RFQ ${selectedRfq.id} approved.`);
+  //   closeDialog();
+  // };
 
-  const handleReject = () => {
-    if (!selectedRfq) return;
-    setRfqs((prev) =>
-      prev.map((rfq) =>
-        rfq.id === selectedRfq.id ? { ...rfq, status: "rejected" } : rfq
-      )
-    );
-    alert(`RFQ ${selectedRfq.id} rejected.`);
-    closeDialog();
-  };
+  // const handleReject = () => {
+  //   if (!selectedRfq) return;
+  //   setRfqs((prev) =>
+  //     prev.map((rfq) =>
+  //       rfq.id === selectedRfq.id ? { ...rfq, status: "rejected" } : rfq
+  //     )
+  //   );
+  //   alert(`RFQ ${selectedRfq.id} rejected.`);
+  //   closeDialog();
+  // };
 
   return (
     <div className="space-y-6">
@@ -118,12 +106,12 @@ const RFQs = () => {
 
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-primary text-xl">Recent RFQs</CardTitle>
+          <CardTitle className="text-primary text-xl">Recent Quotes</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {rfqs.map((rfq) => (
+          {(quotes && quotes.map((q) => (
             <div
-              key={rfq.id}
+              key={q.id}
               className="bg-card border border-blue-200 rounded-xl p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between">
@@ -131,34 +119,46 @@ const RFQs = () => {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h3 className="font-semibold text-primary text-base">
-                        {rfq.id}
-                        <span className="ml-3 font-medium">{rfq.title}</span>
+                        {q.id}
+                        <span className="ml-3 font-medium">{q.name}</span>
                       </h3>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {rfq.company} · {rfq.date}
+                        {q.email} · {q?.date}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xl font-semibold text-accent">
-                        {rfq.amount}
+                        {q.budget}
                       </span>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => openDialog(rfq)}
+                        onClick={() => openDialog(q)}
                       >
                         <Eye className="h-4 w-4 text-accent" />
                       </Button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end">
+                  {/* <div className="flex items-center justify-end">
                     {getStatusBadge(rfq.status)}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
-          ))}
+          ))) || (
+            (!quotes && (
+              <div className="flex flex-col items-center justify-center h-[60vh] px-4 text-center">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100">
+                No Quotes Available Yet
+              </h2>
+              <p className="mt-2 text-gray-500 dark:text-gray-400 text-base sm:text-lg max-w-md">
+                It looks like there are no quotes made till now.
+                Please try to make as much as possible reach to your customers.
+              </p>
+            </div>
+            ))
+          )}
         </CardContent>
       </Card>
 
@@ -170,17 +170,18 @@ const RFQs = () => {
           {selectedRfq && (
             <div className="space-y-4">
               <p><strong>ID:</strong> {selectedRfq.id}</p>
-              <p><strong>Title:</strong> {selectedRfq.title}</p>
-              <p><strong>Company:</strong> {selectedRfq.company}</p>
+              <p><strong>Title:</strong> {selectedRfq.name}</p>
+              <p><strong>Company:</strong> {selectedRfq.email}</p>
               <p><strong>Date:</strong> {selectedRfq.date}</p>
-              <p><strong>Amount:</strong> {selectedRfq.amount}</p>
+              <p><strong>Amount:</strong> {selectedRfq.budget}</p>
               <p><strong>Status:</strong> {getStatusBadge(selectedRfq.status)}</p>
+              <p><strong>Message:</strong> {selectedRfq.message}</p>
               {selectedRfq.status === "pending" && (
                 <div className="flex space-x-4">
-                  <Button onClick={handleApprove} className="bg-green-600 text-white">
+                  <Button className="bg-green-600 text-white">
                     Approve
                   </Button>
-                  <Button onClick={handleReject} className="bg-red-600 text-white">
+                  <Button className="bg-red-600 text-white">
                     Reject
                   </Button>
                 </div>
