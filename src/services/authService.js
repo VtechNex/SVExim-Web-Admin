@@ -18,7 +18,10 @@ async function login(email, password) {
             return response.status;
         }
         const user = {
-            email, token: response.data.token
+            id: response.data.admin.id,
+            name: response.data.admin.name,
+            email,
+            token:response.data.token
         }
         localStorage.setItem("user", JSON.stringify(user));
         return response.status;

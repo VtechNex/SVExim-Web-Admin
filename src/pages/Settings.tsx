@@ -4,8 +4,31 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { useEffect, useState } from "react";
+import { AUTH } from '@/services/authService';
+import USERS from '@/services/userService';
 
 const Settings = () => {
+
+  const [user, setUser] = useState(null)
+
+  useEffect(()=>{
+    const fetchUser = async () => {
+      const u = await AUTH.getUser();
+      setUser(u);
+    }
+    fetchUser();
+  }, []);
+
+  const handleSaveUser = async () => {
+    const response = await USERS.UPDATE(user?.id, user);
+    if (response.status !== 200) {
+      // error
+      console.log('Error saving user', response);
+      return;
+    }
+    localStorage.setItem('user', JSON.stringify(user))
+  }
 
   const handleLogout = () => {
     console.log("User logged out");
@@ -35,19 +58,21 @@ const Settings = () => {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" placeholder="John" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Doe" />
+                <Label htmlFor="firstName">Name</Label>
+                <Input id="firstName" placeholder="John" 
+                  value={user?.name} onChange={(e)=>setUser({...user, name: e.target.value})} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="john.doe@example.com" />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="john.doe@example.com"
+                    value={user?.email} onChange={(e)=>setUser({...user, email: e.target.value})} />
+                </div>
+              </div>
             </div>
-            <Button>Save Changes</Button>
+            <Button onClick={handleSaveUser}>Save Changes</Button>
           </CardContent>
         </Card>
 
