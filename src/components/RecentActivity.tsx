@@ -2,35 +2,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const rfqs = [
-  {
-    id: "RFQ-2024-001",
-    title: "Industrial Valve Set",
-    company: "Marine Solutions Ltd",
-    date: "2024-01-15",
-    amount: "$15,000",
-    status: "pending",
-  },
-  {
-    id: "RFQ-2024-002",
-    title: "Hydraulic Pump",
-    company: "Ocean Logistics Inc",
-    date: "2024-01-14",
-    amount: "$8,500",
-    status: "approved",
-  },
-  {
-    id: "RFQ-2024-003",
-    title: "Steel Fittings",
-    company: "Port Authority",
-    date: "2024-01-13",
-    amount: "$22,000",
-    status: "review",
-  },
-];
+import { useEffect, useState } from "react";
+import QUOTES from '@/services/quoteService';
 
 export function RecentActivity() {
+  const [quotes, setQuotes] = useState(null);
+  const [selectedRfq, setSelectedRfq] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(()=>{
+    const fetchQuotes = async () => {
+      const response = await QUOTES.GET();
+      if (response.status!==200) {
+        // error
+        console.log('Error fetching quotes', response);
+      } else {
+        console.log('Quotes:', response.data);
+        setQuotes(response.data.quotes);
+      }
+    }
+    fetchQuotes();
+  },[]);
+
+  const recentQuotes = quotes?.slice(0, 5);
+
   const getStatusBadge = (status: string) => {
     if (status === "approved") {
       return (
@@ -49,15 +44,25 @@ export function RecentActivity() {
     return null;
   };
 
+  const openDialog = (rfq) => {
+    setSelectedRfq(rfq);
+    setIsDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setSelectedRfq(null);
+    setIsDialogOpen(false);
+  };
+
   return (
     <Card className="border-border">
       <CardHeader>
         <CardTitle className="text-primary text-xl">Recent RFQs</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {rfqs.map((rfq) => (
+        {(recentQuotes && recentQuotes.map((q) => (
           <div
-            key={rfq.id}
+            key={q.id}
             className="bg-card border border-blue-200 rounded-xl p-4 hover:shadow-md transition-shadow"
           >
             <div className="flex items-center justify-between">
@@ -65,29 +70,42 @@ export function RecentActivity() {
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <h3 className="font-semibold text-primary text-base">
-                      {rfq.id}
-                      <span className="ml-3 font-medium">{rfq.title}</span>
+                      {q.id}
+                      <span className="ml-3 font-medium">{q.name}</span>
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {rfq.company} · {rfq.date}
+                      {q.email} · {q?.date}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xl font-semibold text-accent">
-                      {rfq.amount}
+                      {q.budget}
                     </span>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => openDialog(q)}
+                    >
                       <Eye className="h-4 w-4 text-accent" />
                     </Button>
                   </div>
                 </div>
-                <div className="flex items-center justify-end">
+                {/* <div className="flex items-center justify-end">
                   {getStatusBadge(rfq.status)}
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
-        ))}
+        ))) || (
+          (!quotes && (
+            <div className="flex flex-col items-center justify-center h-[60vh] px-4 text-center">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100">
+              No recent activity
+            </h2>
+          </div>
+          ))
+        )}
       </CardContent>
     </Card>
   );
