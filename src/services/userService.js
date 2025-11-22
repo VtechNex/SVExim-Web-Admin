@@ -30,7 +30,7 @@ const createUser = async (userData) => {
 const updateUser = async (userId, userData) => {
   try {
     const response = await axios.put(`${API_URL}/${userId}`, userData);
-    return response.data;
+    return response;
   } catch (error) {
     console.error('Error updating user:', error);
     throw error;
@@ -41,7 +41,7 @@ const updateUser = async (userId, userData) => {
 const deleteUser = async (userId) => {
   try {
     const response = await axios.delete(`${API_URL}/${userId}`);
-    return response.data;
+    return response;
   } catch (error) {
     console.error('Error deleting user:', error);
     throw error;

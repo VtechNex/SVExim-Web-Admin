@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, UserCog } from "lucide-react";
+import { Edit, Pencil, Plus, Trash2, UserCog } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
@@ -13,7 +13,9 @@ const UsersRoles = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [users, setUsers] = useState([]);
-  const [created, setCreated] = useState(false)
+  const [created, setCreated] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [open, setOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +55,39 @@ const UsersRoles = () => {
     setPassword("");
     setOpenDialog(false);
   };
+
+  const handleSubmitEdit = async (e) => {
+    e.preventDefault();
+    const user = { name: selectedUser.name, email: selectedUser.email }
+    const response = await USERS.UPDATE(selectedUser.id, user);
+    if (response.status!==200) {
+      // error
+      console.log('Error while updating user', response);
+      return;
+    }
+    setOpen(false);
+    setSelectedUser(null);
+    setCreated(!created)
+  }
+
+  const handleEditUser = (user) => {
+    setSelectedUser(user);     // populate form fields
+    setOpen(true);             // open the edit dialog
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+    const response = await USERS.DELETE(userId);
+    if (response.status!==200) {
+      // error 
+      console.log('Error while deleting user', response);
+      return;
+    }
+    setOpen(false);
+    setSelectedUser(null);
+    setCreated(!created);
+  };
+
 
 
   useEffect(() => {
@@ -154,6 +189,54 @@ const UsersRoles = () => {
             </form>
           </DialogContent>
         </Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="bg-white text-black rounded-xl max-w-md w-full p-5 max-h-[80vh] overflow-y-auto border border-blue-200 shadow-xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold text-blue-700">
+                Showing User: {selectedUser?.id}
+              </DialogTitle>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmitEdit} className="space-y-4 mt-3">
+              {/* Username */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Username
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Enter username"
+                  value={selectedUser?.name}
+                  onChange={(e) => setSelectedUser({...selectedUser, name: e.target.value})}
+                  className="border-gray-300"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Enter email"
+                  value={selectedUser?.email}
+                  onChange={(e) => setSelectedUser({...selectedUser, email: e.target.value})}
+                  className="border-gray-300"
+                  required
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-base"
+              >
+                Update
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {(users.length === 0 && (
@@ -183,9 +266,25 @@ const UsersRoles = () => {
                     <td className="p-3 text-gray-800">{user.id}</td>
                     <td className="p-3 text-gray-800">{user.name}</td>
                     <td className="p-3 text-gray-800">{user.email}</td>
-                    <td className="p-3">
-                      <Button variant="outline" size="sm">
-                        Manage Roles
+                    <td className="p-3 flex items-center gap-2">
+                      {/* Edit Icon Button */}
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleEditUser(user)}
+                        className="rounded-full p-2 hover:bg-gray-100"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+
+                      {/* Delete Icon Button */}
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="rounded-full p-2 hover:bg-gray-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </td>
                   </tr>
