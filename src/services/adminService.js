@@ -3,7 +3,7 @@ import {AUTH} from './authService';
 
 const API = import.meta.env.VITE_ADMIN_API;
 
-const user = await AUTH.getUser();
+const user = AUTH.getUser();
 if (user) axios.defaults.headers.common.Authorization = `Bearer ${user.token}`;
 
 async function getStats () {
