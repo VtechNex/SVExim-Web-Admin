@@ -17,7 +17,17 @@ async function fetchProducts() {
         return response;
     } catch (error) {
         console.error("Error while fetching products: ", error);
-        return null;
+        return error.response;
+    }
+}
+
+async function getById(id) {
+    try {
+        const response = await axios.get(`${BASE_URL}/${id}`);
+        return response;
+    } catch (error) {
+        console.error('Error fetching product', error);
+        return error.response;
     }
 }
 
@@ -57,6 +67,7 @@ async function deleteProduct(id) {
 
 export const PRODUCTS = {
     GET: fetchProducts,
+    GET_ID: getById,
     ADD: addProduct,
     UPDATE: updateProduct,
     DELETE: deleteProduct,
