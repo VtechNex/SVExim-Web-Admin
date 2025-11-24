@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Package, Tag, FileText, CheckCircle2, Plus } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Tag, CheckCircle2, Plus, ClipboardList, Clock, CheckCircle, XCircle, FileText, Package } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { RecentActivity } from "@/components/RecentActivity";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ADMIN from '@/services/adminService';
 
 const Dashboard = () => {
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
@@ -32,6 +33,24 @@ const Dashboard = () => {
     id: "",
     status: "Pending",
   });
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    activeBrands: 0,
+    pendingRfqs: 0,
+    ordersFulfilled: 0,
+  });
+
+  useEffect(()=>{
+    const fetchStats = async () => {
+      const response = await ADMIN.STATS();
+      if (response.status !== 200) {
+        console.log('Error while fetching stats', response);
+      } else {
+        setStats(response.data.stats);
+      }
+    }
+    fetchStats();
+  }, []);
 
   const handleProductInputChange = (e) => {
     const { name, value } = e.target;
@@ -92,40 +111,7 @@ const Dashboard = () => {
     });
   };
 
-  const stats = [
-    {
-      title: "Total Products",
-      value: "1,247",
-      change: "+12% from last month",
-      changeType: "positive" as const,
-      icon: Package,
-      iconColor: "text-secondary",
-    },
-    {
-      title: "Active Brands",
-      value: "156",
-      change: "+3% from last month",
-      changeType: "positive" as const,
-      icon: Tag,
-      iconColor: "text-secondary",
-    },
-    {
-      title: "Pending RFQs",
-      value: "23",
-      change: "+8% from last month",
-      changeType: "positive" as const,
-      icon: FileText,
-      iconColor: "text-secondary",
-    },
-    {
-      title: "Orders Fulfilled",
-      value: "892",
-      change: "+15% from last month",
-      changeType: "positive" as const,
-      icon: CheckCircle2,
-      iconColor: "text-accent",
-    },
-  ];
+  
 
   return (
     <div className="space-y-8">
@@ -138,11 +124,44 @@ const Dashboard = () => {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <StatsCard key={index} {...stat} />
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <StatsCard
+          title="Total Products"
+          value={String(stats.totalProducts)}
+          change=""               // you don't have change yet
+          changeType="neutral"
+          icon={Package}
+          iconColor="text-secondary"
+        />
+
+        <StatsCard
+          title="Active Brands"
+          value={String(stats.activeBrands)}
+          change=""
+          changeType="neutral"
+          icon={Tag}
+          iconColor="text-secondary"
+        />
+
+        <StatsCard
+          title="Pending Quotes"
+          value={String(stats.pendingRfqs)}
+          change=""
+          changeType="neutral"
+          icon={FileText}
+          iconColor="text-secondary"
+        />
+
+        <StatsCard
+          title="Orders Fulfilled"
+          value={String(stats.ordersFulfilled)}
+          change=""
+          changeType="neutral"
+          icon={FileText}
+          iconColor="text-secondary"
+        />
       </div>
+
 
       <div className="bg-card rounded-lg p-6 border border-border">
         <h2 className="text-xl font-bold text-primary mb-4">Quick Actions</h2>
