@@ -8,6 +8,9 @@ export default function EbayAuth() {
   const [status, setStatus] = useState("Processing eBay authentication...");
   const [code, setCode] = useState<string | null>(null);
   const [disabled, setDisabled] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [synced, setSynced] = useState(0);
 
   useEffect(() => {
     // Get full URL including fragments (#)
@@ -25,7 +28,7 @@ export default function EbayAuth() {
 
     if (extractedCode) {
       setCode(extractedCode);
-      setStatus("Finalizing eBay store connection...");
+      setStatus("⏳ Finalizing eBay store connection...");
 
       const sendCodeToBackend = async () => {
         const response = await AUTH.oauth(extractedCode);
@@ -53,14 +56,32 @@ export default function EbayAuth() {
   }, [location.search]);
 
   const handleSync = async (e) => {
+    let p = 1, tp = 1, s = 0;
     setDisabled(true);
 
-    const response = await EBAY.syncProducts();
-    if (response.status !== 200) {
-      console.log('Got error', response)
-    } else {
-      setStatus(`Sync products done. [Synced ${response.data?.synced}]`)
+    while (p <= tp) {
+      setStatus(`
+        ⏳ Syncing products... (Page ${p} of ${tp})\n
+        ⏳ Synced ${s} products so far...\n
+        ⏳ Please do not close this window.
+      `);
+      const response = await EBAY.syncProducts(p, tp);
+      if (response && response.status === 200) {
+        const data = response.data;
+        p++;
+        tp = data.totalPages;
+        s = data.synced;
+        setSynced(s);
+        setPage(p);
+        setTotalPages(tp);
+      } else {
+        setStatus("❌ Error during product sync. Please try again later.");
+        setDisabled(false);
+        return;
+      }
     }
+
+    setStatus("✅ Product sync completed successfully!\nTotal products synced: " + s);
 
     setDisabled(false);
   }
@@ -94,9 +115,10 @@ export default function EbayAuth() {
       </div>
 
       {/* Status Bar - full width */}
-      <div className="w-full max-w-3xl bg-blue-50 border border-blue-200 text-blue-700 text-center py-4 rounded-xl shadow-sm font-medium mb-6">
-        {status}
+      <div className="w-full max-w-3xl bg-blue-50 border border-blue-200 text-blue-700 text-left px-4 py-4 rounded-xl shadow-sm font-medium mb-6">
+        <pre className="whitespace-pre-wrap">{status}</pre>
       </div>
+
 
       {/* Code Box */}
       {code && (
