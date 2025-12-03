@@ -59,7 +59,7 @@ export default function EbayAuth() {
     if (response.status !== 200) {
       console.log('Got error', response)
     } else {
-      console.log('Sync done', response);
+      setStatus(`Sync products done. [Synced ${response.data?.synced}]`)
     }
 
     setDisabled(false);
