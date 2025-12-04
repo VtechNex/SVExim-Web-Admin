@@ -9,17 +9,20 @@ if (token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 }
 
-async function fetchProducts() {
-    try {
-        const response = await axios.get(BASE_URL,
-            { headers: { 'Content-Type': 'application/json' } }
-        );
-        return response;
-    } catch (error) {
-        console.error("Error while fetching products: ", error);
-        return error.response;
-    }
+async function fetchProducts(page = 1, limit = 20, search = "", filter = {}) {
+  try {
+    const response = await axios.get(BASE_URL, {
+      params: { page, limit, search, ...filter },
+      headers: { "Content-Type": "application/json" },
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error while fetching products: ", error);
+    return error.response;
+  }
 }
+
 
 async function getById(id) {
     try {

@@ -17,14 +17,26 @@ import { PRODUCTS } from "@/services/productService";
 // ✅ Import defaultBrands from your new data file
 import { defaultBrands } from "../data/brandsData";
 import { categories } from "../data/categories"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // ----------------------
 // Main Component
 // ----------------------
-const Products = () => {
-  const [products, setProducts] = useState(null);
+const Products = ({ searchText }) => {
+  const [products, setProducts] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [pagination, setPagination] = useState(null);
+  const [page, setPage] = useState(1);
+  const limit = 20;
+  const [category, setCategory] = useState("");
+  const [brand, setBrand] = useState("");
+  const [condition, setCondition] = useState("");
+  const [status, setStatus] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [sort, setSort] = useState("");
+
 
   const [formData, setFormData] = useState({
     id: null,
@@ -40,17 +52,41 @@ const Products = () => {
     statusColor: "",
   });
 
+  const handleApplyFilters = async () => {
+    const response = await PRODUCTS.GET(1, 20, searchText, {
+      category,
+      brand,
+      condition,
+      status,
+      minPrice,
+      maxPrice,
+      sort,
+    });
+    
+    if (response.status !== 200) {
+      alert("Failed to fetch products.");
+      return;
+    }
+
+    setProducts(response.data.items);
+    setPagination(response.data.pagination);
+  };
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      const response = await PRODUCTS.GET();
+    const fetchData = async () => {
+      const response = await PRODUCTS.GET(page, limit);
+
       if (response.status !== 200) {
         alert("Failed to fetch products.");
         return;
       }
+
       setProducts(response.data.items);
+      setPagination(response.data.pagination);
     };
-    fetchProducts();
-  }, []);
+
+    fetchData();
+  }, [page]);
 
   const resetForm = () => {
     setFormData({
@@ -154,6 +190,120 @@ const Products = () => {
           Add Product
         </Button>
       </div>
+      {/* Filters Row */}
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        {/* Category */}
+        <div className="flex flex-col">
+          <label className="text-sm text-muted-foreground mb-1">Category</label>
+          <Select onValueChange={setCategory}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="marine">Marine</SelectItem>
+              <SelectItem value="industrial">Industrial</SelectItem>
+              <SelectItem value="tools">Tools</SelectItem>
+              <SelectItem value="electronics">Electronics</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Brand */}
+        <div className="flex flex-col">
+          <label className="text-sm text-muted-foreground mb-1">Brand</label>
+          <Select onValueChange={setBrand}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select brand" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="yamaha">Yamaha</SelectItem>
+              <SelectItem value="bosch">Bosch</SelectItem>
+              <SelectItem value="honda">Honda</SelectItem>
+              <SelectItem value="philips">Philips</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Condition */}
+        <div className="flex flex-col">
+          <label className="text-sm text-muted-foreground mb-1">Condition</label>
+          <Select onValueChange={setCondition}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Any condition" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="new">New</SelectItem>
+              <SelectItem value="used">Used</SelectItem>
+              <SelectItem value="refurbished">Refurbished</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Status */}
+        <div className="flex flex-col">
+          <label className="text-sm text-muted-foreground mb-1">Status</label>
+          <Select onValueChange={setStatus}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Any status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Price Range */}
+        <div className="flex flex-col">
+          <label className="text-sm text-muted-foreground mb-1">Min Price</label>
+          <Input
+            type="number"
+            placeholder="0"
+            className="w-full"
+            onChange={(e) => setMinPrice(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-sm text-muted-foreground mb-1">Max Price</label>
+          <Input
+            type="number"
+            placeholder="10000"
+            className="w-full"
+            onChange={(e) => setMaxPrice(e.target.value)}
+          />
+        </div>
+
+        {/* Sort By */}
+        <div className="flex flex-col">
+          <label className="text-sm text-muted-foreground mb-1">Sort By</label>
+          <Select onValueChange={setSort}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Default" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="latest">Latest</SelectItem>
+              <SelectItem value="price_asc">Price: Low to High</SelectItem>
+              <SelectItem value="price_desc">Price: High to Low</SelectItem>
+              <SelectItem value="az">A → Z</SelectItem>
+              <SelectItem value="za">Z → A</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Apply Button */}
+        <div className="flex items-end">
+          <Button
+            className="w-full bg-primary text-white hover:bg-primary/90"
+            onClick={handleApplyFilters}
+          >
+            Apply Filters
+          </Button>
+        </div>
+      </div>
+
 
       {/* Product Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -214,6 +364,24 @@ const Products = () => {
             </p>
           </div>
         )}
+      </div>
+
+      <div className="flex items-center justify-center gap-4 mt-6">
+        <Button
+          disabled={page <= 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Previous
+        </Button>
+
+        <span>Page {page} of {pagination?.totalPages}</span>
+
+        <Button
+          disabled={page >= pagination?.totalPages}
+          onClick={() => setPage(page + 1)}
+        >
+          Next
+        </Button>
       </div>
 
       {/* Dialog for Add/Edit Product */}
